@@ -12,10 +12,11 @@ This project is a simple smart contract for storing and managing Ether. The foll
     ```bash
     npm install
     ```
-3. Deploy the contract:
-    ```bash
-    node deploy.js
+3. Deploy the contract and Interact with the contract
+    ```bash 
+    node index.js
     ```
+    
 4. Interact with the contract:
     ```bash
     node interact.js
