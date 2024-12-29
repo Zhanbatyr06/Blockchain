@@ -1,10 +1,10 @@
- // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract EtherWallet {
     address public owner;
 
-    // Сохраняем адрес владельца при развертывании контракта
+    // Конструктор для сохранения адреса владельца
     constructor() {
         owner = msg.sender;
     }
@@ -13,7 +13,7 @@ contract EtherWallet {
     receive() external payable {}
 
     // Функция для проверки баланса контракта
-    function getBalance() public view returns (uint) {
+    function getBalance() public view returns (uint256) {
         return address(this).balance;
     }
 

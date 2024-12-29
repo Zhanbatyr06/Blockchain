@@ -1,98 +1,103 @@
-const Web3 = require('web3').default;
 
-// Подключение к Infura
-const web3 = new Web3('https://holesky.infura.io/v3/ff7f53c9b1cc47ef95d202adb3104306');
+// OR
+const { Web3 } = require('web3'); // For CommonJS
 
-// Адрес контракта и ABI
-const contractAddress = '0xf176ca0089da2069c87dc7db7c1661c70b4d70fe';
+const fs = require('fs');
+const path = require('path');
+
+// Connect to Ganache local network
+const web3 = new Web3('http://127.0.0.1:7545');
+
+// Read the compiled contract (ABI and bytecode)
 const contractABI = [
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "getBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	}
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "Transfer",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address payable",
+                "name": "recipient",
+                "type": "address"
+            }
+        ],
+        "name": "transferEther",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getContractBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
 ];
+const bytecode = '0x6080604052348015600e575f80fd5b50603e80601a5f395ff3fe60806040525f80fdfea2646970667358221220a650ccba819b67eb602bb96ab2b9e3aa6e47608e6780f8d1284ab1aa5cd0ad1264736f6c63430008150033'; // Replace with actual bytecode
 
-// Подключение контракта
-const contract = new web3.eth.Contract(contractABI, contractAddress);
-
-// Проверка сети и наличия контракта
-async function checkConnection() {
-    try {
-        const networkId = await web3.eth.net.getId();
-        console.log('Подключенная сеть:', networkId);
-
-        const code = await web3.eth.getCode(contractAddress);
-        if (code === '0x') {
-            console.error('Контракт не найден по адресу:', contractAddress);
-            return false;
-        } else {
-            console.log('Контракт найден по адресу:', contractAddress);
-            return true;
-        }
-    } catch (err) {
-        console.error('Ошибка проверки сети или контракта:', err.message);
-        return false;
-    }
-}
-
-// Проверка баланса контракта
-async function getContractBalance() {
-    try {
-        console.log('Доступные методы контракта:', contract.methods);
-        const balance = await contract.methods.getBalance().call();
-        console.log('Баланс контракта:', web3.utils.fromWei(balance, 'ether'), 'ETH');
-    } catch (err) {
-        console.error('Ошибка вызова метода getBalance:', err.message);
-    }
-}
-
-// Основной скрипт
 (async () => {
-    try {
-        const isConnected = await checkConnection();
-        if (isConnected) {
-            console.log('Проверка баланса контракта...');
-            await getContractBalance();
-        }
-    } catch (error) {
-        console.error('Ошибка:', error.message);
-    }
+    const accounts = await web3.eth.getAccounts();
+    const deployer = accounts[0];
+
+    console.log('Deploying from account:', deployer);
+
+    const contract = new web3.eth.Contract(contractABI);
+
+    const deployedContract = await contract
+        .deploy({ data: bytecode })
+        .send({ from: deployer, gas: 3000000 });
+
+    console.log('Contract deployed at:', deployedContract.options.address);
+})();
+(async () => {
+    const contractAddress = '0xEC43247D1aD0D3fC039675542A1A3aD82AfEcAfB';
+    const accounts = await web3.eth.getAccounts();
+    const sender = accounts[0];
+    const recipient = accounts[1];
+
+    console.log('Contract deployed at:', contractAddress);
+
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+    // Transfer 1 Ether
+    const amount = web3.utils.toWei('1', 'ether');
+    await contract.methods
+        .transferEther(recipient)
+        .send({ from: sender, value: amount });
+
+    console.log(`1 Ether transferred from ${sender} to ${recipient}`);
 })();
