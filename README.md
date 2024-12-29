@@ -16,11 +16,6 @@ This project is a simple smart contract for storing and managing Ether. The foll
     ```bash 
     node index.js
     ```
-    
-4. Interact with the contract:
-    ```bash
-    node interact.js
-    ```
 
 ## Demonstration
 
